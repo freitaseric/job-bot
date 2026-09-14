@@ -91,6 +91,7 @@ jobs:
       - name: Deploy
         run: |
           ssh \
+            "-i ~/.ssh/id_ed25519" \
             "${{ secrets.OCI_USER }}@${{ secrets.OCI_HOST }}" \
             '
               cd /opt/job-bot &&
