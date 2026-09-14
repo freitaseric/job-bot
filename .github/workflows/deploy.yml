@@ -79,8 +79,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
 
-          echo "${{ secrets.OCI_SSH_KEY }}" \
-            > ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.OCI_SSH_KEY }}" > ~/.ssh/id_ed25519
 
           chmod 600 ~/.ssh/id_ed25519
 
@@ -91,11 +90,12 @@ jobs:
       - name: Deploy
         run: |
           ssh \
-            "-i ~/.ssh/id_ed25519" \
+            -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
             "${{ secrets.OCI_USER }}@${{ secrets.OCI_HOST }}" \
             '
               cd /opt/job-bot &&
               docker compose pull &&
-              docker compose up -d &&
+              docker compose up -d --remove-orphans &&
               docker image prune -f
             '
