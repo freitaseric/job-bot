@@ -1,0 +1,13 @@
+.git
+.github
+docs
+.env
+.env.*
+!.env.example
+
+README.md
+DEVELOPMENT.md
+LICENSE
+
+bin
+tmp
