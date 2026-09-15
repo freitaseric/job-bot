@@ -1,10 +1,11 @@
 package discord
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"freitaseric.com/job-bot/internal/discordkit"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -58,45 +59,58 @@ func (b *Bot) SyncCommands() error {
 	return nil
 }
 
-func (b *Bot) handlePingCommand(i *discordgo.InteractionCreate) {
-	err := b.session.InteractionRespond(
-		i.Interaction,
-		&discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Pong!",
-			},
-		},
+func (b *Bot) registerCommands() {
+	b.router.Command(
+		"ping",
+		b.handlePingCommand,
 	)
 
-	if err != nil {
-		slog.Error("failed to respond to ping", "error", err)
-	}
+	b.router.Command(
+		"configurar",
+		b.handleConfigCommand,
+	)
 }
 
-func (b *Bot) handleConfigCommand(i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options
+func (b *Bot) handlePingCommand(
+	ctx *discordkit.Context,
+) {
+	if err := ctx.Defer(); err != nil {
+		slog.Error(
+			"failed to defer interaction",
+			"error", err,
+		)
 
-	data, err := json.MarshalIndent(options, "", "  ")
-	if err != nil {
-		slog.Error("failed to marshal options", "error", err)
 		return
 	}
 
-	err = b.session.InteractionRespond(
-		i.Interaction,
-		&discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: fmt.Sprintf(
-					"```json\n%s\n```",
-					string(data),
-				),
-			},
-		},
-	)
+	time.Sleep(2 * time.Second)
 
-	if err != nil {
-		slog.Error("failed to respond to config", "error", err)
+	if err := ctx.Edit(
+		discordkit.Text("Pong depois de 2 segundos!"),
+	); err != nil {
+		slog.Error(
+			"failed to edit interaction",
+			"error", err,
+		)
+	}
+
+	if err := ctx.Followup(
+		discordkit.Text("Essa é uma segunda mensagem."),
+	); err != nil {
+		slog.Error(
+			"failed to send followup",
+			"error", err,
+		)
+	}
+}
+
+func (b *Bot) handleConfigCommand(ctx *discordkit.Context) {
+	if err := ctx.Reply(
+		discordkit.Text("Configuração"),
+	); err != nil {
+		slog.Error(
+			"failed to respond to configurar",
+			"error", err,
+		)
 	}
 }

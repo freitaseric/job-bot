@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"log/slog"
 
+	"freitaseric.com/job-bot/internal/discordkit"
 	"github.com/bwmarrin/discordgo"
 )
 
 // Bot representa a integração da aplicação com o Discord.
 type Bot struct {
-	appID   string
-	session *discordgo.Session
+	appID           string
+	session         *discordgo.Session
+	router          *discordkit.Router
+	componentRouter *discordkit.ComponentRouter
 }
 
 // New cria e configura uma nova instância do bot.
 //
 // A conexão com o Discord ainda não é aberta.
 // Use Start para iniciar a sessão.
-func New(
+func NewBot(
 	token string,
 	appID string,
 ) (*Bot, error) {
@@ -32,10 +35,16 @@ func New(
 	}
 
 	bot := &Bot{
-		appID:   appID,
-		session: session,
+		appID:           appID,
+		session:         session,
+		router:          discordkit.NewRouter(),
+		componentRouter: discordkit.NewComponentRouter(),
 	}
 
+	bot.registerCommands()
+	if err := bot.registerComponent(); err != nil {
+		slog.Error("failed to register routes", "error", err)
+	}
 	bot.registerHandlers()
 
 	return bot, nil

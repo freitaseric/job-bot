@@ -12,7 +12,6 @@ func (b *Bot) registerHandlers() {
 	b.session.AddHandler(b.onInteractionCreate)
 }
 
-// onReady é executado quando o Discord informa que a sessão está pronta.
 func (b *Bot) onReady(
 	session *discordgo.Session,
 	ready *discordgo.Ready,
@@ -24,18 +23,21 @@ func (b *Bot) onReady(
 }
 
 func (b *Bot) onInteractionCreate(
-	_ *discordgo.Session,
+	s *discordgo.Session,
 	i *discordgo.InteractionCreate,
 ) {
-	if i.Type != discordgo.InteractionApplicationCommand {
-		return
-	}
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		b.router.Handle(s, i)
 
-	switch i.ApplicationCommandData().Name {
-	case "ping":
-		b.handlePingCommand(i)
+	case discordgo.InteractionMessageComponent,
+		discordgo.InteractionModalSubmit:
 
-	case "configurar":
-		b.handleConfigCommand(i)
+		if err := b.componentRouter.Dispatch(s, i); err != nil {
+			slog.Error(
+				"failed to handle component interaction",
+				"error", err,
+			)
+		}
 	}
 }

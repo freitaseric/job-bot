@@ -56,7 +56,7 @@ func run() error {
 	// Discord
 	// ------------------------------------------------------------
 
-	bot, err := discord.New(
+	bot, err := discord.NewBot(
 		cfg.DiscordToken,
 		cfg.DiscordAppID,
 	)
